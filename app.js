@@ -34,7 +34,8 @@ const userSchema = new mongoose.Schema({
     email: String,
     password: String,
     googleId: String,
-    facebookId: String
+    facebookId: String,
+    secret: String
 });
 
 
@@ -126,11 +127,16 @@ app.get("/register", function (req, res) {
 
 
 app.get('/secrets', function(req,res){
-    if(req.isAuthenticated()){
-        res.render('secrets');
-    } else{
-        res.redirect('/login');
-    }
+    User.find({ "secret": { $ne: null } })
+    .then(foundUser => {
+      if (foundUser) {
+        res.render('secrets', { usersWithSecrets: foundUser });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  
 })
 
 app.get('/logout', function(req, res){
@@ -141,6 +147,29 @@ app.get('/logout', function(req, res){
     });
     res.redirect('/');
 });
+
+
+app.get('/submit', function(req,res){
+    if(req.isAuthenticated()){
+        res.render('submit');
+    } else{
+        res.redirect('/login');
+    }
+})
+
+app.post("/submit", function(req,res){
+    const submittedSecret = req.body.secret;
+    User.findByIdAndUpdate(req.user.id, { secret: submittedSecret })
+  .then(foundUser => {
+    res.redirect('/secrets');
+  })
+  .catch(err => {
+    console.log(err);
+  });
+  
+
+})
+
 
 app.post("/register", (req, res) => {
     User.register({username: req.body.username}, req.body.password, function(err, user){
