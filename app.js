@@ -90,9 +90,15 @@ passport.use(new FacebookStrategy({
 ));
 
 
-app.get("/", function (req, res) {
-    res.render("home");
-});
+app.get('/', async(req, res)=>{
+    try{
+        const result = await axios.get("https://secrets-api.appbrewery.com/random")
+        res.render('index.ejs', {secret: result.data.secret, user: result.data.username})
+    }catch{
+        console.log(error.response.data)
+        res.status(500)
+    }
+})
 
 app.get('/auth/google', 
     passport.authenticate("google", {scope: ['profile']})
